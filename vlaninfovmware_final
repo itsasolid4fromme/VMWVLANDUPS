@@ -1,0 +1,32 @@
+# Connect to vCenter Server
+Connect-VIServer -Server prt2avc.dti.state.de.us -User <username> -Password <password>
+# Get all distributed port groups in the vCenter Server
+$dvpgs = Get-VDPortgroup
+
+# Create an array to store the results
+$results = @()
+
+# Loop through each distributed port group
+foreach ($dvpg in $dvpgs) {
+    # Get the VLAN ID of the distributed port group
+    $vlan = $dvpg.ExtensionData.Config.DefaultPortConfig.Vlan.VlanId
+
+    # Get the name of the distributed port group
+    $name = $dvpg.Name
+
+    # Get the vSphere Distributed Switch name of the distributed port group
+    $dvs = $dvpg | Get-VDSwitch
+
+    # Add the VLAN, name, and vSphere Distributed Switch name to the results array
+    $results += [PSCustomObject]@{
+        VLAN = $vlan
+        Name = $name
+        DVS = $dvs.Name
+    }
+}
+
+# Export the results to a CSV file
+$results | Export-Csv -Path C:\vmwaredpv2.csv -NoTypeInformation
+
+# Disconnect from vCenter Server
+Disconnect-VIServer -Confirm:$false
